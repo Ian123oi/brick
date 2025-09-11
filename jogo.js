@@ -130,7 +130,7 @@ $().ready(function () {
             bola.x = player.x + player.l / 2 - bola.r / 2;
             bola.y = player.y - bola.r;
 
-            
+
         }
     }
     function desenharTela() {
@@ -159,18 +159,24 @@ $().ready(function () {
         }
         acompanhaBola(bola, player1);
 
-        
-        
+
+
         for (contLinha = 0; contLinha < 48; contLinha++) {
 
             if (detectaColisao(inimigos[contLinha], bola)) {
                 bola.vy = -bola.vy;
                 inimigos[contLinha].x = 100000;
-                    contplayer++;
+                contplayer++;
                 console.log(contplayer);
             }
             inimigos[contLinha].desenharObjeto();
         }
+
+            if (contplayer == 48) {
+                alert ("Você ganhou um bis e uma coxinha! Consulte o ADM");
+                reseta();
+            }
+
         player1.desenharObjeto();
         bola.desenharObjeto();
 
@@ -205,14 +211,19 @@ $().ready(function () {
         if (obj.y - obj.r > canvas.height) {
             comecou = false;
             alert("tu perdeu otario");
-            inimigos = [];
-            insereinimigo();
-            contplayer = 0;
+            reseta();
         }
 
+        
+        }
 
-
-    }
+function reseta() {
+                comecou = false;
+                inimigos = [];
+                insereinimigo();
+                contplayer = 0;
+            }
+    
     desenharTela();
     $(window).keydown(function (event) {
         if (event.which == 65) { //cima
