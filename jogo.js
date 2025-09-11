@@ -3,11 +3,16 @@ $().ready(function () {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     var ctx = canvas.getContext("2d");
-    var colisao = false;
+    var colisao = 0;
     var contplayer = 0;
-    var perdeu = false;
-    var contInimigo = 0;
+    var inimigos = [];
     var comecou = false;
+    var contColuna = 0;
+    var contLinha = 0;
+    var corbarra;
+
+
+
     var bola = {
 
         "vx": gerarVx(),
@@ -31,10 +36,10 @@ $().ready(function () {
     var player1 = {
         "vx": 0,
         "vy": 0,
-        "x": canvas.height / 2,
+        "x": canvas.width / 2 - 200,
         "y": canvas.height - 5,
         "l": 200,
-        "a": 50 ,
+        "a": 50,
         "cor": "white",
         atualiza: function () {
             this.x += this.vx;
@@ -48,31 +53,46 @@ $().ready(function () {
 
     }
 
-    var inimigo = {
-        "vy": 3,
-        "x": canvas.width - 10,
-        "y": canvas.height / 2,
-        "l": 5,
-        "a": 60,
-        "cor": "white",
-        atualiza: function () {
-            this.y += this.vy;
-        },
-        desenharObjeto: function () {
-            ctx.fillStyle = this.cor;
-            ctx.fillRect(this.x, this.y, this.l, this.a);
 
+    function criainimigo(tempx, tempy, cor) {
+        return {
+            "x": tempx,
+            "y": tempy,
+            "l": 150,
+            "a": 50,
+            "cor": cor,
+            desenharObjeto: function () {
+                ctx.fillStyle = this.cor;
+                ctx.fillRect(this.x, this.y, this.l, this.a);
+            }
         }
+    };
+    function insereinimigo() {
+        for (contLinha = 0; contLinha < 4; contLinha++) {
+            for (contColuna = 0; contColuna < 12; contColuna++) {
+                if (contLinha == 0) {
+                    corbarra = "lightblue";
+                } else if (contLinha == 1) {
+                    corbarra = "blue";
+                } else if (contLinha == 2) {
+                    corbarra = "green";
+                } else if (contLinha == 3) {
+                    corbarra = "orange";
+                }
+                inimigos.push(criainimigo(160 * contColuna, contLinha * 60, corbarra));
 
+            }
+        }
     }
+    insereinimigo();
     function gerarVx() {
         let vx;
         do {
-          vx = Math.floor(Math.random() * 5) - 2; // de -2 a 2
+            vx = Math.floor(Math.random() * 5) - 2; // de -2 a 2
         } while (vx === 0);
         return vx;
-      }
-      
+    }
+
 
 
     function detectaColisao(o1, o2) {
@@ -87,10 +107,30 @@ $().ready(function () {
         return (base1 > top2 && dir1 > esq2 && base2 > top1 && dir2 > esq1);
 
     }
+
+    function detectaRaqueta(o1, o2) {
+        var top1 = o1.y;
+        var top2 = o2.y;
+        var esq1 = o1.x;
+        var meio = o1.x + o1.l / 2;
+
+        var dir2 = o2.x + o2.r;
+        var base1 = o1.y + o1.a;
+        var base2 = o2.y + o2.r;
+        if (base1 > top2 && esq1 < dir2 && meio > dir2 && top1 < base2) {
+            console.log("esquerda");
+            colisao = 1;
+        } else {
+            colisao = 2;
+            console.log("direita");
+        }
+    }
     function acompanhaBola(bola, player) {
         if (comecou === false) {
             bola.x = player.x + player.l / 2 - bola.r / 2;
             bola.y = player.y - bola.r;
+
+            
         }
     }
     function desenharTela() {
@@ -105,11 +145,32 @@ $().ready(function () {
         detectaLimiteObj(bola);
 
         if (detectaColisao(player1, bola)) {
-            bola.vy = -bola.vy;
+
+            detectaRaqueta(player1, bola);
+            if (colisao == 1) {
+                bola.vx = -2
+                bola.vy = -bola.vy;
+            }
+            else if (colisao == 2) {
+                bola.vx = 2;
+                bola.vy = -bola.vy;
+            }
+
         }
         acompanhaBola(bola, player1);
 
+        
+        
+        for (contLinha = 0; contLinha < 48; contLinha++) {
 
+            if (detectaColisao(inimigos[contLinha], bola)) {
+                bola.vy = -bola.vy;
+                inimigos[contLinha].x = 100000;
+                    contplayer++;
+                console.log(contplayer);
+            }
+            inimigos[contLinha].desenharObjeto();
+        }
         player1.desenharObjeto();
         bola.desenharObjeto();
 
@@ -144,18 +205,13 @@ $().ready(function () {
         if (obj.y - obj.r > canvas.height) {
             comecou = false;
             alert("tu perdeu otario");
+            inimigos = [];
+            insereinimigo();
+            contplayer = 0;
         }
 
 
 
-    } function detectaPonto(obj) {
-        if (obj.x < 0) {
-            gol = 2;
-        } else if (obj.x > canvas.width - obj.l) {
-            gol = 1;
-        } else {
-            gol = 0;
-        }
     }
     desenharTela();
     $(window).keydown(function (event) {
